@@ -1,0 +1,115 @@
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.screen { background: #fff; width: 100%; max-width: 960px; display: flex; flex-direction: column; align-items: flex-start; padding: 56px 80px; font-family: 'Google Sans', 'Roboto', sans-serif; text-align: left; }
+.g-logo { width: 40px; height: 40px; margin-bottom: 36px; }
+h1 { font-size: 30px; font-weight: 400; color: #202124; margin-bottom: 14px; }
+.subtitle { font-size: 14px; color: #5f6368; white-space: nowrap; margin-bottom: 32px; line-height: 1.6; }
+.progress-track { width: 100%; height: 4px; background: #e8eaed; border-radius: 2px; overflow: hidden; margin-bottom: 16px; }
+.progress-fill { height: 100%; background: #1a73e8; border-radius: 2px; width: 0%; transition: width 0.6s ease; }
+.dl-status { font-size: 14px; color: #5f6368; margin-bottom: 4px; }
+.anim-area { position: relative; width: 180px; height: 180px; margin: 48px auto 0; align-self: center; }
+.circle { position: absolute; inset: 0; border: 2.5px solid #4285F4; border-radius: 50%; }
+.arrow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -42%); }
+.particle { position: absolute; width: 10px; height: 10px; border-radius: 1px; opacity: 0; }
+</style>
+
+<div class="screen">
+  <svg class="g-logo" viewBox="0 0 46 46">
+    <path d="M23.5 10.5c3.5 0 6.5 1.4 8.8 3.6l6.6-6.6C34.6 3.6 29.4 1 23.5 1 14.7 1 7.2 6.2 3.8 13.6l7.7 6C13.2 14.1 17.9 10.5 23.5 10.5z" fill="#EA4335"/>
+    <path d="M45 23.5c0-1.6-.1-3.1-.4-4.5H23.5v8.6h12.1c-.5 2.7-2.1 5-4.4 6.6l6.9 5.4C41.6 36.1 45 30.3 45 23.5z" fill="#4285F4"/>
+    <path d="M11.5 27.4A13.9 13.9 0 0 1 10.5 23.5c0-1.4.2-2.7.6-3.9l-7.7-6A22.8 22.8 0 0 0 1 23.5c0 3.7.9 7.2 2.4 10.3l8.1-6.4z" fill="#FBBC05"/>
+    <path d="M23.5 46c5.8 0 10.7-1.9 14.3-5.1l-6.9-5.4c-1.9 1.3-4.4 2-7.4 2-5.6 0-10.3-3.7-12-8.7l-8.1 6.4C7.2 40.5 14.8 46 23.5 46z" fill="#34A853"/>
+  </svg>
+
+  <h1>Updating...</h1>
+  <p class="subtitle">Your Chromebook will restart after this update. Future software and security updates will install automatically.</p>
+  <div class="progress-track"><div class="progress-fill" id="bar"></div></div>
+  <div class="dl-status" id="status">Downloading: About 33 minutes left</div>
+
+  <div class="anim-area" id="anim">
+    <div class="circle"></div>
+    <svg class="arrow" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4285F4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="4" x2="12" y2="16"/>
+      <polyline points="8 12 12 16 16 12"/>
+    </svg>
+  </div>
+</div>
+
+<script>
+const bar = document.getElementById('bar');
+const status = document.getElementById('status');
+const anim = document.getElementById('anim');
+
+const colors = ['#EA4335','#4285F4','#FBBC05','#34A853','#EA4335','#4285F4'];
+const shapes = [
+  {w:10,h:10,r:0},{w:10,h:10,r:45},{w:10,h:10,r:0},
+  {w:14,h:7,r:0},{w:7,h:14,r:0},{w:10,h:10,r:30},
+];
+
+const particles = [];
+for (let i = 0; i < 6; i++) {
+  const el = document.createElement('div');
+  el.className = 'particle';
+  el.style.background = colors[i];
+  el.style.width = shapes[i].w + 'px';
+  el.style.height = shapes[i].h + 'px';
+  el.style.transform = `rotate(${shapes[i].r}deg)`;
+  anim.appendChild(el);
+  particles.push(el);
+}
+
+const orbits = [
+  {angle:-60,radius:55},{angle:-20,radius:62},{angle:20,radius:58},
+  {angle:50,radius:60},{angle:-80,radius:52},{angle:70,radius:64},
+];
+
+const cx = 80, cy = 80;
+function animParticles(t) {
+  const cycle = 2200, phase = (t % cycle) / cycle;
+  particles.forEach((p, i) => {
+    const offset = i / particles.length;
+    const local = (phase + offset) % 1;
+    if (local < 0.5) {
+      const rise = local / 0.5;
+      const riseEase = 1 - Math.pow(1 - rise, 2);
+      const startAngle = (orbits[i].angle + i * 15) * Math.PI / 180;
+      const floatX = Math.sin(startAngle) * orbits[i].radius * riseEase;
+      const x = cx + floatX - shapes[i].w/2;
+      const y = cy - 10 - riseEase * 55 - shapes[i].h/2;
+      const opacity = rise < 0.1 ? rise * 10 : rise > 0.85 ? (1 - rise) / 0.15 : 1;
+      p.style.left = x + 'px';
+      p.style.top = y + 'px';
+      p.style.opacity = opacity * 0.9;
+    } else {
+      p.style.opacity = 0;
+    }
+  });
+  requestAnimationFrame(animParticles);
+}
+requestAnimationFrame(animParticles);
+
+// 4-hour total duration: 4 * 60 * 60 * 1000 = 14,400,000 ms
+// Interval: 800ms → ~18,000 steps → increment ~0.00556% per step
+let pct = 0;
+const displayMinutes = 33; // shown to user
+bar.style.width = '0%';
+
+const interval = setInterval(() => {
+  pct += Math.random() * 0.004 + 0.003; // avg ~0.005% → ~4 hrs to reach 100
+  if (pct >= 100) pct = 100;
+  bar.style.width = pct + '%';
+
+  const remaining = Math.round(displayMinutes * (1 - pct / 100));
+  if (pct < 99) {
+    status.textContent = remaining > 1
+      ? `Downloading: About ${remaining} minute${remaining !== 1 ? 's' : ''} left`
+      : 'Almost done downloading…';
+  } else {
+    status.textContent = 'Installing update…';
+    setTimeout(() => { status.textContent = 'Restarting in a moment…'; }, 4000);
+    clearInterval(interval);
+  }
+}, 800);
+</script>
